@@ -1,3 +1,8 @@
+#
+# the script to draw ids of the recommender system run
+#
+
+# [d:\\works\\projects\\RecommenderSystem\\tests\\] -- the folder where we run recommender system
 items_ids <- read.delim("d:\\works\\projects\\RecommenderSystem\\tests\\items_ids.dta", header=FALSE)
 users_ids <- read.delim("d:\\works\\projects\\RecommenderSystem\\tests\\users_ids.dta", header=FALSE)
 
@@ -31,6 +36,7 @@ plot(users_ids$V12,users_ids$V13,xlim = c(-0.5,0.5),ylim = c(-0.5,0.5))
 plot(users_ids_01$V14,users_ids_01$V15,xlim = c(-0.5,0.5),ylim = c(-0.5,0.5))
 plot(users_ids$V14,users_ids$V15,xlim = c(-0.5,0.5),ylim = c(-0.5,0.5))
 
+hist(items_ids$V2,breaks = 35)  
 hist(items_ids$V3,breaks = 35)  
 hist(items_ids$V4,breaks = 35)  
 hist(items_ids$V5,breaks = 35)  
@@ -45,5 +51,6 @@ hist(items_ids$V13,breaks = 35)
 hist(items_ids$V14,breaks = 35)  
 hist(items_ids$V15,breaks = 35)  
 
+# update ids for the next step
 items_ids_01 <- items_ids
 users_ids_01 <- users_ids
