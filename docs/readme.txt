@@ -34,7 +34,7 @@ But I should mention that we need to take into account the “breathing” of encode
 
 Then we repeat training of autoencoders for corrected id values. And then get new id values once again. And so on. 
 
-So we get products and users id vectors. That id vectors will be used in prediction of rating value(s). We train neural net that takes 1) a user id vector; 2) a user data; 3) a product id vector; 4) a product data; 5) a rating data to produce rating of the product for the user.
+So we get products and users id vectors. That id vectors will be used in prediction of rating value(s). We train neural net that takes 1) a user id vector; 2) a user data; 3) a product id vector; 4) a product data; 5) a rating data to predict rating of the product for the user.
 
 After building the model we will use it.
 1.	We predict ratings of the product by the user.
