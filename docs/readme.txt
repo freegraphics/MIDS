@@ -22,26 +22,25 @@ The phase of model training
 
 First we need to train autoencoders. There are to autoencoders in system one for the products space and one for users space. 
 
-Let the first autoencoder  will take M (5..9) items of the record of rating some product by some users.  One record contains: 1) the user id vector; 2) the user data; 3) the rate (or rates) of this user for some product and 4) the rating data (by this user for some product). All that records for the one train step are for the one product. And this autoencoder will encode the product id vectors. 
+Let the first autoencoder takes M (5..9) records of rating some product by some users.  One record for the first autoencoder contains: 1) the user id vector; 2) the user data; 3) the rate (or rates) of a user for the product and 4) the rating data (by users for some product). All that records (for one train step) are for one product. And first autoencoder encodes the products id vectors. 
 
-Let the second autoencoder will take M (5..9) items of the record of rating products by some user. One record contains: 1) the product id vector: 2) the product data; 3) the rate (or rates) of the user for this product and 4) the rating data (by some user to this product). All that records for the one train step are for the one user that rates some products This autoencoder will encode the user id vectors.
+Let the second autoencoder takes M (5..9) records of rating products by some user. One record contains: 1) the product id vector: 2) the product data; 3) the rate (or rates) of the user for a product and 4) the rating data (by the user for a product). All that records (for one train step) are for one user. This autoencoder encodes the users id vectors.
 
 In 100..1000 cycles after we have trained autoencoders, we start getting products and users id vectors.
 
-For one product we get (24..64) encoded values by running the first autoencoder. Then we get average of those encoded values and so we get new product id vector to move to. We repeat that process for some products. So we will get new products id vectors to move the old id vectors to. Same we do for some users. And will get new users id vectors to move the old id vectors to.
+For one product we get (24..64) encoded values by running the first autoencoder. (We set autoencoder input as we did while training.) Then we get average of those encoded values. And so we get new product id vector to move to. We repeat that process for some products. So we get new products id vectors to move the old products id vectors to. Same we do for some users. And will get new users id vectors to move the old users id vectors to.
 
 But I should mention that we need to take into account the “breathing” of encoded values of autoencoders. I use getting the average offset of id vectors to correct such “breathing”. See code for details.
 
-Then we repeat training of autoencoders for corrected id values. And then get new id values once again. And so on. 
+Then we repeat training of autoencoders for corrected id vectors. And then we repeat getting of new id values once again. And so on. 
 
-So we get products and users id vectors. That id vectors will be used in prediction of rating value(s). We train neural net that takes 1) a user id vector; 2) a user data; 3) a product id vector; 4) a product data; 5) a rating data to predict rating of the product for the user.
+So we get products and users id vectors. That id vectors we use in prediction of rating value(s). We train neural net that takes 1) a user id vector; 2) a user data; 3) a product id vector; 4) a product data; 5) a rating data to predict rating(s) of a product for a user.
 
-After building the model we will use it.
-1.	We predict ratings of the product by the user.
-2.	We correct id values after getting new ratings from users.
-3.	We add new id vectors of new products and users. 
+After building the model we can use it.
+1.	We predict ratings of a product for a user.
+2.	We correct id vectors after getting new ratings from users. We do it same as we did while getting id vectors in the training phase.
+3.	We add new id vectors of new products and users. In same way. 
 
-When we use model we do not train neural nets, we just compute the id vector as we did in the train model phase.
+When we use model we do not need to train neural nets, we just compute the id vectors. That gives us opportunity to optimize calculations.
 
-
-P.S. Looking for a job
+(P.S. Looking for a job.)
