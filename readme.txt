@@ -1,5 +1,5 @@
 Recommender system demo. 
 
-See doc folder for the simple description.
+See docs folder for the simple description.
 
 Uses numpy, panda, theano python libs. 
