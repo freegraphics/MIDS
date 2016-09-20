@@ -42,3 +42,6 @@ After building the model we will use it.
 3.	We add new id vectors of new products and users. 
 
 When we use model we do not train neural nets, we just compute the id vector as we did in the train model phase.
+
+
+P.S. Looking for a job
