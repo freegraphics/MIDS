@@ -1,1 +1,1 @@
-see https://github.com/freegraphics/MIDSdata/ml-1m -- for the data
+see https://github.com/freegraphics/MIDSdata/tree/master/ml-1m -- for the data

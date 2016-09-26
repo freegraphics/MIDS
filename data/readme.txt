@@ -1,1 +1,1 @@
-See https://github.com/freegraphics/MIDSdata/data for the data
+See https://github.com/freegraphics/MIDSdata/tree/master/data for the data
