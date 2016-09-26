@@ -42,7 +42,7 @@ class Consts(object):
         the constructor
         '''
         
-        self.load_from_ids = int(12) 
+        self.load_from_ids = int(0) 
         
         # rates constants
         self.MaxRate = int(5)
