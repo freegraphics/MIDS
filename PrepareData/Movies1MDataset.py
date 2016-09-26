@@ -459,6 +459,6 @@ def prepare_data(consts = Consts()):
 
 if __name__ == '__main__':
     consts = Consts()
-    #convert_csv(consts)
+    convert_csv(consts)
     prepare_data(consts)
     pass
