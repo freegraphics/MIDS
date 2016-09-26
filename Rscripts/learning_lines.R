@@ -2,9 +2,9 @@
 # the script to draw learning lines 
 #
 
-# [d:\\works\\projects\\RecommenderSystem\\tests\\] -- the folder where we run recommender system
+# [F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35\\trace.txt] -- the folder where we run recommender system
 
-learning <- read.table("d:\\works\\projects\\RecommenderSystem\\tests\\trace.txt", quote="\"", comment.char="")
+learning <- read.table("F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35\\trace.txt", quote="\"", comment.char="")
 x <- c(min(learning$V1),max(learning$V1))
 y <- c(0,max(learning$V2))
 par(col="black")
@@ -20,3 +20,4 @@ y <- c(min(learning$V2),min(learning$V2))
 lines(x,y)
 y <- c(min(learning$V3),min(learning$V3))
 lines(x,y)
+

@@ -42,15 +42,15 @@ class Consts(object):
         the constructor
         '''
         
-        self.load_from_ids = 0 
+        self.load_from_ids = int(12) 
         
         # rates constants
-        self.MaxRate = 5
+        self.MaxRate = int(5)
         
         # paths constants
-        self.data_path = "..\\data\\ml-1m" 
-        self.result_path = "..\\tests\\16.09.18 -- 14-40 -- Recommender System Theano"
-        self.trained_path = "..\\tests\\16.09.18 -- 14-40 -- Recommender System Theano\\ids_000"
+        self.data_path = "F:\\works\\projects\\python\\RecommenderSystem\\data" 
+        self.result_path = "F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35"
+        self.trained_path = "F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35\\ids_000"
 
         # source data file names        
         self.users_cvs_file_name = os.path.join(self.data_path,"users.csv")
@@ -83,69 +83,69 @@ class Consts(object):
         self.user_rates_of_movies_file_name = os.path.join(self.result_path,"%04d_movies_rate.txt")
         self.user_movies_by_rates_file_name = os.path.join(self.result_path,"%04d_movies_by_rate.txt")
         
-        self.save_cycles = 50 
+        self.save_cycles = int(50) 
     
         # MIDS constants
-        self.user_id_size = 15
-        self.item_id_size = 15
+        self.user_id_size = int(31)
+        self.item_id_size = int(31)
         
-        self.user_max_distance = 256.0*float(self.user_id_size)
-        self.item_max_distance = 256.0*float(self.item_id_size)
+        self.user_max_distance = float(256.0*self.user_id_size)
+        self.item_max_distance = float(256.0*self.item_id_size)
         
-        self.encode_elements_count = 5
+        self.encode_elements_count = int(5)
         
         # encoder defaults 
-        self.encoder_batch_size = 32
-        self.encoder_learning_rate = 0.1
-        self.encoder_corruption_rate = 0.0
-        self.encoder_hidden_layers_count = 6
+        self.encoder_batch_size = int(32)
+        self.encoder_learning_rate = float(0.1)
+        self.encoder_corruption_rate = float(0.0)
+        self.encoder_hidden_layers_count = int(6)
         self.encoder_hidden_layers_activation = T.nnet.relu
-        self.encoder_hidden_layer_size = 128    
+        self.encoder_hidden_layer_size = int(256)    
         self.encoder_L1_decay = float(0.0)
         self.encoder_L2_decay = float(1.0e-4)
-        self.encoder_loss_k = 1.0e-3
+        self.encoder_loss_k = float(1.0e-3)
         
         # result defaults
-        self.result_batch_size = 32
-        self.result_learning_rate = 0.1
-        self.result_hidden_layers_count = 8
+        self.result_batch_size = int(32)
+        self.result_learning_rate = float(0.1)
+        self.result_hidden_layers_count = int(6)
         self.result_hidden_layers_activation = T.nnet.relu
-        self.result_hidden_layer_size = 128    
+        self.result_hidden_layer_size = int(256)    
         self.result_L1_decay = float(0.0)
         self.result_L2_decay = float(1.0e-4)
-        self.result_loss_k = 1.0e-3
+        self.result_loss_k = float(1.0e-3)
         
         # items ids net  defaults
-        self.itemids_batch_size = 32
-        self.itemids_learning_rate = 0.1
-        self.itemids_hidden_layers_count = 8
+        self.itemids_batch_size = int(32)
+        self.itemids_learning_rate = float(0.1)
+        self.itemids_hidden_layers_count = int(6)
         self.itemids_hidden_layers_activation = T.nnet.relu
-        self.itemids_hidden_layer_size = 128    
+        self.itemids_hidden_layer_size = int(256)
         self.itemids_L1_decay = float(0.0)
         self.itemids_L2_decay = float(1.0e-4)
-        self.itemids_loss_k = 1.0e-3
+        self.itemids_loss_k = float(1.0e-3)
         
-        self.train_rate = 0.9
-        self.validate_cycles = 5
+        self.train_rate = float(0.9)
+        self.validate_cycles = int(5)
         
         # move ids constants
-        self.users_ids_move_elem_count_rate = 0.1
-        self.items_ids_move_elem_count_rate = 0.2
-        self.users_ids_move_elem_count_rate1 = 0.1
-        self.items_ids_move_elem_count_rate1 = 0.1
-        self.users_ids_avg_rate = 0.2
-        self.items_ids_avg_rate = 0.2
-        self.new_user_cycles = 100
-        self.new_item_cycles = 100
-        self.ids_update_users_normilized_vs_avg_rate = 0.99
-        self.ids_update_items_normilized_vs_avg_rate = 0.99
+        self.users_ids_move_elem_count_rate = float(0.1)
+        self.items_ids_move_elem_count_rate = float(0.2)
+        self.users_ids_move_elem_count_rate1 = float(0.1)
+        self.items_ids_move_elem_count_rate1 = float(0.1)
+        self.users_ids_avg_rate = float(0.2)
+        self.items_ids_avg_rate = float(0.2)
+        self.new_user_cycles = int(100)
+        self.new_item_cycles = int(100)
+        self.ids_update_users_normilized_vs_avg_rate = float(0.99)
+        self.ids_update_items_normilized_vs_avg_rate = float(0.99)
         
-        self.avg_dx_item_small_weight = 0.3
-        self.min_max_compresion_rate = 0.95
+        self.avg_dx_item_small_weight = float(0.3)
+        self.min_max_compresion_rate = float(0.95)
 
-        self.ids_move_count = 1000 
-        self.ids_move_count_coef = 0.5
-        self.dist_sqrt_coef = 9.0
+        self.ids_move_count = int(1000) 
+        self.ids_move_count_coef = float(0.5)
+        self.dist_sqrt_coef = float(9.0)
         
         self.train_rates_rate = float(0.5)
         self.train_itemids_rate = float(0.5)
@@ -161,30 +161,30 @@ class Consts(object):
         return os.path.join(path,fname)
     
     def update_index(self,index):
-        if index<100:
-            self.users_ids_move_elem_count_rate = 0.2 # 6040*0.25 == 1510
-            self.items_ids_move_elem_count_rate = 0.2 # 3000*0.25 == 750
-            self.users_ids_move_elem_count_rate1 = 0.25
-            self.items_ids_move_elem_count_rate1 = 0.25
-            self.ids_move_count = 4000
-            self.ids_move_count_coef = 0.5
+        if index<int(100):
+            self.users_ids_move_elem_count_rate = float(0.2) # 6040*0.25 == 1510
+            self.items_ids_move_elem_count_rate = float(0.2) # 3000*0.25 == 750
+            self.users_ids_move_elem_count_rate1 = float(0.25)
+            self.items_ids_move_elem_count_rate1 = float(0.25)
+            self.ids_move_count = int(2000)
+            self.ids_move_count_coef = float(0.5)
             return
-        if index>=100 and index<500:
+        if index>=int(100) and index<int(500):
             r = float(index-1000)/float(1500.0-1000.0)
-            self.users_ids_move_elem_count_rate = (1.0-r)*0.2 + r*0.25
-            self.items_ids_move_elem_count_rate = (1.0-r)*0.2 + r*0.25
-            self.users_ids_move_elem_count_rate1 = (1.0-r)*0.25 + r*1.0
-            self.items_ids_move_elem_count_rate1 = (1.0-r)*0.25 + r*1.0
-            self.ids_move_count = int((1.0-r)*4000 + r*5000) 
-            self.ids_move_count_coef = (1.0-r)*0.5 + r*0.5
+            self.users_ids_move_elem_count_rate = float((1.0-r)*0.2 + r*0.25)
+            self.items_ids_move_elem_count_rate = float((1.0-r)*0.2 + r*0.25)
+            self.users_ids_move_elem_count_rate1 = float((1.0-r)*0.25 + r*1.0)
+            self.items_ids_move_elem_count_rate1 = float((1.0-r)*0.25 + r*1.0)
+            self.ids_move_count = int((1.0-r)*2000 + r*2000) 
+            self.ids_move_count_coef = float((1.0-r)*0.5 + r*0.5)
             return
-        if index>=500:
+        if index>=int(500):
             r = float(index-500)/float(1000.0*3.0)
-            self.users_ids_move_elem_count_rate = 0.25
-            self.items_ids_move_elem_count_rate = 0.25
-            self.users_ids_move_elem_count_rate1 = 1.0
-            self.items_ids_move_elem_count_rate1 = 1.0
-            self.ids_move_count = 5000 
-            self.ids_move_count_coef = 0.5/(1.0+r)
+            self.users_ids_move_elem_count_rate = float(0.25)
+            self.items_ids_move_elem_count_rate = float(0.25)
+            self.users_ids_move_elem_count_rate1 = float(1.0)
+            self.items_ids_move_elem_count_rate1 = float(1.0)
+            self.ids_move_count = int(2000) 
+            self.ids_move_count_coef = float(0.5/(1.0+r))
             return
         return

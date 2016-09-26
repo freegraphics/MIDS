@@ -33,6 +33,7 @@ import os
 import time
 import numpy
 import pandas
+import csv
 
 from Nets import ApproxNet
 from Nets import AutoEncoder
@@ -177,6 +178,8 @@ class MatrixIDs(object):
         ,usersids_data,itemsids_data
         ,ratings_by_user,ratings_by_user_ids,ratings_by_user_idx
         ,ratings_by_item,ratings_by_item_ids,ratings_by_item_idx
+        ,users_cnt
+        ,items_cnt
         ,rng
         ,theano_rng
         ,consts = Consts()
@@ -206,8 +209,8 @@ class MatrixIDs(object):
         self.new_item_cycles = consts.new_item_cycles  
         #self.users_ids_move_elem_count_rate = consts.users_ids_move_elem_count_rate
         #self.items_ids_move_elem_count_rate = consts.items_ids_move_elem_count_rate
-        self.items_count = self.ratings_by_item_ids[self.ratings_by_item_idx[len(self.ratings_by_item_idx)-1,0],self.movie_indice]
-        self.users_count = self.ratings_by_user_ids[self.ratings_by_user_idx[len(self.ratings_by_user_idx)-1,0],self.user_indice]
+        self.items_count = items_cnt
+        self.users_count = users_cnt
         if not items_ids:
             items_ids = rng.uniform(low = -0.5,high = 0.5, size = (self.items_count,self.item_id_size)).astype(theano.config.floatX)
         if not users_ids:
@@ -291,8 +294,8 @@ class MatrixIDs(object):
         return
     
     def update_user_ids(self,consts):
-        i0 = numpy.int32(float(self.index)/float(consts.ids_move_count)*self.users_ids.shape[0])
-        i1 = numpy.int32(float(self.index+1)/float(consts.ids_move_count)*self.users_ids.shape[0])
+        i0 = int(float(self.index)/float(consts.ids_move_count)*self.users_ids.shape[0])
+        i1 = int(float(self.index+1)/float(consts.ids_move_count)*self.users_ids.shape[0])
         if i0==i1:
             i1 = i0+1
         i0 = min(i0,self.users_ids.shape[0]-1)
@@ -301,8 +304,8 @@ class MatrixIDs(object):
         return
     
     def update_item_ids(self,consts):
-        i0 = numpy.int32(float(self.index)/float(consts.ids_move_count)*self.items_ids.shape[0])
-        i1 = numpy.int32(float(self.index+1)/float(consts.ids_move_count)*self.items_ids.shape[0])
+        i0 = int(float(self.index)/float(consts.ids_move_count)*self.items_ids.shape[0])
+        i1 = int(float(self.index+1)/float(consts.ids_move_count)*self.items_ids.shape[0])
         if i0==i1:
             i1 = i0+1
         i0 = min(i0,self.items_ids.shape[0]-1)
@@ -440,7 +443,7 @@ class MatrixIDs(object):
             if j<len(user_idxes):
                 user_idx1 = user_idxes[j]
             else:
-                user_idx1 = user_idxes[-1]
+                user_idx1 = user_idxes[len(user_idxes)-1]
             curr_user_idx_index = curr_user_idx_index = self.ratings_by_user_idx[user_idx1,0]
             values = []
             user_id = self.ratings_by_item_ids[curr_user_idx_index,self.user_indice] - 1
@@ -476,7 +479,7 @@ class MatrixIDs(object):
             if j<len(item_idxes):
                 item_idx1 = item_idxes[j]
             else:
-                item_idx1 = item_idxes[-1]
+                item_idx1 = item_idxes[len(item_idxes)-1]
             curr_item_idx_index = self.ratings_by_item_idx[item_idx1,0]
             values = []
             item_id = self.ratings_by_item_ids[curr_item_idx_index,self.movie_indice] - 1   
@@ -504,21 +507,23 @@ class MatrixIDs(object):
         y_result = self.users_ids_to_item_id_autoencoder.get_encoded_fn(x_value)
         return y_result[0]
     
-    def get_new_user_ids(self,consts):
+    def get_new_user_ids(self,users_cnt,consts):
         lt = time.time()
         self.users_ids_base = self.users_ids.copy()
         self.new_users_ids = self.users_ids.copy()
         user_ids_ind = numpy.arange(len(self.ratings_by_user_idx))
         numpy.random.shuffle(user_ids_ind)
-        updates_elements_cnt = numpy.int32(len(user_ids_ind)*consts.users_ids_move_elem_count_rate)
-        updates_elements_cnt = ((updates_elements_cnt/self.mini_batch_size)+1)*self.mini_batch_size
+        updates_elements_cnt = int(len(user_ids_ind)*consts.users_ids_move_elem_count_rate)
+        updates_elements_cnt = int(((updates_elements_cnt/self.mini_batch_size)+1)*self.mini_batch_size)
         for cycle in numpy.arange(self.new_user_cycles):
             for i00 in numpy.arange(updates_elements_cnt/self.mini_batch_size):
-                i0 = i00*self.mini_batch_size
-                i1 = (i00+1)*self.mini_batch_size
+                i0 = int(i00*self.mini_batch_size)
+                i1 = int((i00+1)*self.mini_batch_size)
                 if i1>=updates_elements_cnt:
                     i1 = updates_elements_cnt-1
                 #user_ids = self.ratings_by_user_ids[self.ratings_by_user_idx[user_ids_ind[i0:i1],0],0]
+                if i0==i1: 
+                    continue
                 encoded = self.__get_user_ids(user_ids_ind[i0:i1])
                 for i in numpy.arange(self.mini_batch_size):
                     if i0+i>=updates_elements_cnt:
@@ -537,7 +542,7 @@ class MatrixIDs(object):
                     
         user_ids = self.ratings_by_user_ids[self.ratings_by_user_idx[user_ids_ind[0:updates_elements_cnt],0],self.user_indice] - 1
                         
-        user_id_max = self.ratings_by_user_ids[self.ratings_by_user_idx[len(self.ratings_by_user_idx)-1,0],self.user_indice]
+        user_id_max = users_cnt
         self.users_ids_mask = numpy.zeros(shape=user_id_max, dtype=numpy.int8)
         self.users_ids_mask[user_ids] = 1
         self.new_users_ids[user_ids,] = self.new_users_ids[user_ids,] / float(self.new_user_cycles)
@@ -552,7 +557,7 @@ class MatrixIDs(object):
             ,mask = self.users_ids_mask
             )
         
-        updates_elements_cnt_lo = numpy.int32(updates_elements_cnt*consts.users_ids_move_elem_count_rate1)
+        updates_elements_cnt_lo = int(updates_elements_cnt*consts.users_ids_move_elem_count_rate1)
         user_ids = self.ratings_by_user_ids[self.ratings_by_user_idx[user_ids_ind[updates_elements_cnt_lo:updates_elements_cnt],0],self.user_indice] - 1
         self.new_users_ids[user_ids,] = self.users_ids_base[user_ids,]
          
@@ -561,21 +566,23 @@ class MatrixIDs(object):
         self.index = 0
         return
 
-    def get_new_item_ids(self,consts):
+    def get_new_item_ids(self,movies_cnt,consts):
         lt = time.time()
         self.items_ids_base =  self.items_ids.copy()
         self.new_items_ids = self.items_ids.copy()
         item_ids_ind = numpy.arange(len(self.ratings_by_item_idx))
         numpy.random.shuffle(item_ids_ind)
-        updates_elements_cnt = numpy.int32(len(item_ids_ind)*consts.items_ids_move_elem_count_rate)
-        updates_elements_cnt = ((updates_elements_cnt/self.mini_batch_size)+1)*self.mini_batch_size 
+        updates_elements_cnt = int(len(item_ids_ind)*consts.items_ids_move_elem_count_rate)
+        updates_elements_cnt = int(((updates_elements_cnt/self.mini_batch_size)+1)*self.mini_batch_size) 
         for cycle in numpy.arange(self.new_item_cycles):
             for i00 in numpy.arange(updates_elements_cnt/self.mini_batch_size):
-                i0 = i00*self.mini_batch_size
-                i1 = (i00+1)*self.mini_batch_size
+                i0 = int(i00*self.mini_batch_size)
+                i1 = int((i00+1)*self.mini_batch_size)
                 if i1>=updates_elements_cnt:
                     i1 = updates_elements_cnt-1
                 #item_ids = self.ratings_by_item_ids[self.ratings_by_item_idx[item_ids_ind[i0:i1],0],1]
+                if i0==i1: 
+                    continue
                 encoded = self.__get_item_ids(item_ids_ind[i0:i1])
                 for i in numpy.arange(self.mini_batch_size):
                     if i0+i>=updates_elements_cnt:
@@ -594,7 +601,7 @@ class MatrixIDs(object):
              
         item_ids = self.ratings_by_item_ids[self.ratings_by_item_idx[item_ids_ind[0:updates_elements_cnt],0],self.movie_indice] - 1
                    
-        item_id_max = self.ratings_by_item_ids[self.ratings_by_item_idx[len(self.ratings_by_item_idx)-1,0],self.movie_indice]
+        item_id_max = movies_cnt 
         self.items_ids_mask = numpy.zeros(shape=item_id_max, dtype=numpy.int8)
         self.items_ids_mask[item_ids] = 1
         self.new_items_ids[item_ids,] = self.new_items_ids[item_ids,] / float(self.new_item_cycles)
@@ -605,7 +612,7 @@ class MatrixIDs(object):
             ,mask = self.items_ids_mask
             )
 
-        updates_elements_cnt_lo = numpy.int32(updates_elements_cnt*consts.items_ids_move_elem_count_rate1)
+        updates_elements_cnt_lo = int(updates_elements_cnt*consts.items_ids_move_elem_count_rate1)
         item_ids = self.ratings_by_item_ids[self.ratings_by_item_idx[item_ids_ind[updates_elements_cnt_lo:updates_elements_cnt],0],self.movie_indice] - 1
         self.new_items_ids[item_ids,] = self.items_ids_base[item_ids,]
         
@@ -712,7 +719,7 @@ class RatesApprox(object):
         x_value = numpy.zeros((self.mini_batch_size,x_size), dtype=theano.config.floatX)
         y_size = 1
         y_value = numpy.zeros((self.mini_batch_size,y_size), dtype=theano.config.floatX)
-        max_train_indice = numpy.int32(self.all_rates_indices.shape[0]*self.train_size_rate)
+        max_train_indice = int(self.all_rates_indices.shape[0]*self.train_size_rate)
         for bi in numpy.arange(self.mini_batch_size):
             train_indice = self.rng.randint(low=0 ,high = max_train_indice) 
             user_id = self.ratings_by_user_ids[self.all_rates_indices[train_indice],self.user_indice] - 1 
@@ -749,19 +756,19 @@ class RatesApprox(object):
         rates = numpy.zeros(userids_itemids.shape[0],dtype=theano.config.floatX)
         x_size = self.item_id_size + self.user_id_size + self.itemsids_data.shape[1]+self.usersids_data.shape[1]+self.ratings_by_user.shape[1] - 1 
         x_value = numpy.zeros((self.mini_batch_size,x_size), dtype=theano.config.floatX)
-        cnt = (userids_itemids.shape[0]/self.mini_batch_size+1)*self.mini_batch_size
+        cnt = int((userids_itemids.shape[0]/self.mini_batch_size+1)*self.mini_batch_size)
         for i in numpy.arange(cnt/self.mini_batch_size):
             for bi in numpy.arange(self.mini_batch_size):
-                idx = i*self.mini_batch_size + bi
+                idx = int(i*self.mini_batch_size + bi)
                 if idx>=userids_itemids.shape[0]:
                     idx = userids_itemids.shape[0]-1
-                user_id = userids_itemids[idx,self.user_indice]
-                item_id = userids_itemids[idx,self.movie_indice]
-                i0 = 0
-                i1 = self.item_id_size
+                user_id = int(userids_itemids[idx,self.user_indice])
+                item_id = int(userids_itemids[idx,self.movie_indice])
+                i0 = int(0)
+                i1 = int(self.item_id_size)
                 x_value[bi,i0:i1] = self.matrix_ids.items_ids[item_id,]
                 i0 = i1 
-                i1 = i0 + self.user_id_size
+                i1 = i0 + int(self.user_id_size)
                 x_value[bi,i0:i1] = self.matrix_ids.users_ids[user_id,]
                 i0 = i1
                 i1 = i0 + self.itemsids_data.shape[1]
@@ -774,14 +781,14 @@ class RatesApprox(object):
                 x_value[bi,i0:i1] = ratesinfo[idx,:]
             y_result = self.net.run_fn(x_value)
             for bi in numpy.arange(self.mini_batch_size):
-                idx = i*self.mini_batch_size + bi
+                idx = int(i*self.mini_batch_size + bi)
                 if idx>=userids_itemids.shape[0]:
                     continue
                 rates[idx] = y_result[0][bi,0]
         return rates
     
     def validate(self,consts):
-        max_train_indice = numpy.int32(self.all_rates_indices.shape[0]*self.train_size_rate)
+        max_train_indice = int(self.all_rates_indices.shape[0]*self.train_size_rate)
         validate_indicies = numpy.arange(self.all_rates_indices.shape[0] - max_train_indice)
         validate_indicies[:] += max_train_indice
         userids_itemids = numpy.zeros((self.all_rates_indices.shape[0] - max_train_indice,2),dtype=theano.config.floatX);
@@ -822,208 +829,8 @@ class RecommenderSystem(object):
     '''
     class for recommender systems
     '''
-    
-    def prepare_data(self,consts = Consts()):
-        print("loading data...")
-        
-        self.user_indice = 0
-        self.movie_indice = 1
-        
-        
-        # user_cvs
-        # columns: 
-        #     id -- int (key); sex -- ['M'|'F']; age -- int; 
-        #     accupation -- int; lattitude -- real; longitude -- real; 
-        #     timezone -- int; dts -- [0|1];   
-        #
-        users_cvs = pandas.read_csv(
-            consts.users_cvs_file_name
-            ,header=None
-            ,sep=";"
-            ,names = ["id","sex","age","accupation","lattitude","longitude","timezone","dts"]
-            ,skipinitialspace = False
-            )
-        print("The users_cvs was loaded.")
-        #print(users_cvs)
-        
-        # movies_cvs 
-        # columns:
-        #    id -- int (key); name -- string; gender -- string; year -- int;
-        movies_cvs = pandas.read_csv(
-            consts.movies_cvs_file_name
-            ,header=None
-            ,sep=";"
-            ,names = ["id","name","gender","year"]
-            ,skipinitialspace = False
-            )
-        print("The movies_cvs was loaded.")
-        #print(movies_cvs)
-        
-        # ratings_cvs
-        # columns:
-        #     userid -- int (from users_cvs id key); filmid -- int (from movies_cvs id key); 
-        #     rate -- real; wday -- int; yday -- int; year -- int; 
-        ratings_cvs = pandas.read_csv(
-            consts.ratings_cvs_file_name
-            ,header=None
-            ,sep=";"
-            ,names=["userid","filmid","rate","wday","yday","year"]
-            ,skipinitialspace = False
-            )
-        print("The ratings_cvs was loaded.")
-        #print(ratings_cvs)
-        
-        
-        # usersids
-        # columns:
-        #     sex -- +0.5 - 'M', -0.5 - 'F'
-        #     age -- -0.5 - min, +0.5 - max
-        
-        last_user_id = users_cvs["id"][len(users_cvs)-1]
-        usersids = numpy.zeros(dtype=theano.config.floatX,shape=(last_user_id,2))
-        age_min = 1
-        age_max = 56
-        for i in numpy.arange(len(users_cvs)):
-            if users_cvs["sex"][i]=="M":
-                usersids[users_cvs["id"][i]-1,0] = 0.5
-            else:
-                usersids[users_cvs["id"][i]-1,0] = -0.5
-            usersids[users_cvs["id"][i]-1,1] = get_aranged(value = users_cvs["age"][i], min_value = age_min, max_value = age_max)  
-        print(usersids[0:100,])
-        
-        # moviesids 
-        # columns:
-        #     year -- -0.5 - min, +0.5 - max
-        
-        last_film_id = movies_cvs["id"][len(movies_cvs)-1]
-        moviesids = numpy.zeros(dtype=theano.config.floatX,shape=(last_film_id,1))
-        min_year = float(movies_cvs["year"].min())
-        max_year = float(movies_cvs["year"].max())
-        d_year = max_year - min_year
-        min_year = min_year - d_year*0.1
-        max_year = max_year + d_year*0.1  
-        for i in numpy.arange(len(movies_cvs)):
-            moviesids[movies_cvs["id"][i]-1,0] = get_aranged(value = movies_cvs["year"][i], min_value = min_year, max_value = max_year)
-        print(moviesids[0:100,])
-
-        
-        ratings_cvs["id"] = numpy.arange(len(ratings_cvs))
-        ratings_cvs["UserRate"] = ratings_cvs["rate"] 
-        ratings_cvs["MeanRate"] = ratings_cvs["rate"] 
-        grouped_by_user = ratings_cvs.groupby(by="userid")
-        #mean_rate_by_user = grouped_by_user["rate"].mean()
-        lt = time.time()
-        i = 0
-        for name,group in grouped_by_user:
-            mean_rate_by_user = group["rate"].mean()
-            ratings_cvs.loc[group["id"],"UserRate"] = ratings_cvs.loc[group["id"],"UserRate"] - mean_rate_by_user
-            ratings_cvs.loc[group["id"],"MeanRate"] = mean_rate_by_user
-            t1 = time.time()
-            if t1>lt+1:
-                p = float(i)/float(len(grouped_by_user))*100.0
-                print("UserRates %f %%" % (p))
-                lt = lt+1
-            i = i + 1
-        ratings_cvs["UserRate"] = ratings_cvs["UserRate"]/(2*consts.MaxRate)
-        print("The UserRates column was calculated")
-        print(ratings_cvs.head(100))
-        
-        # ratings_by_user_idx
-        # columns:
-        #    for one user_id, ratings_by_user_ids and ratings_by_user indexes pair
-        #  
-        #    start_indice -- int
-        #    end_indice -- int
-        
-        # ratings_by_user_ids
-        # columns:
-        #    user_id -- int
-        #    film_id -- int
-        
-        # ratings_by_user
-        # every row for one ratings_by_user_ids row i.m. for one pair (user_id,film_id) 
-        # columns:
-        #    user_rate -- -0.5 - min .. +0.5 - max;
-        #    wday -- -0.5 - min .. + 0.5 - max;
-           
-        ratings_by_user = numpy.zeros(dtype=theano.config.floatX,shape=(len(ratings_cvs),2))
-        ratings_by_user_ids = numpy.zeros(dtype=numpy.int32,shape=(len(ratings_cvs),2))
-        ratings_by_user_idx = numpy.zeros(dtype=numpy.int32,shape=(len(grouped_by_user),2))
-        i = 0
-        li = 0
-        lt = time.time()
-        j = 0
-        for name,group in grouped_by_user:
-            user_id = numpy.int32(name)
-            for row_id in group["id"]:
-                ratings_by_user_ids[j,self.user_indice] = user_id 
-                ratings_by_user_ids[j,self.movie_indice] = numpy.int32(ratings_cvs.loc[row_id,"filmid"])
-                ratings_by_user[j,0] = ratings_cvs.loc[row_id,"UserRate"]
-                ratings_by_user[j,1] = get_aranged(value = ratings_cvs.loc[row_id,"wday"], min_value = 0, max_value = 6)
-                j = j + 1
-            ratings_by_user_idx[i,] = [li,li+len(group)]  
-            li = li + len(group)
-            t1 = time.time()
-            if t1>lt+1:
-                print("rating_by_user %f %%" % (float(i)/float(len(grouped_by_user))*100))
-                lt = lt+1
-            i = i + 1
-        print("ratings_by_user rates was calculated")    
-        
-        # ratings_by_movie_idx
-        # columns:
-        #    for one movie_id, ratings_by_movie_ids and ratings_by_movie indexes pair
-        #  
-        #    start_indice -- int
-        #    end_indice -- int
-        
-        # ratings_by_movie_ids
-        # columns:
-        #    user_id -- int
-        #    film_id -- int
-        
-        # ratings_by_movie
-        # every row for one ratings_by_movie_ids row i.m. for one pair (user_id,film_id) 
-        # columns:
-        #    user_rate -- -0.5 - min .. +0.5 - max;
-        #    wday -- -0.5 - min .. + 0.5 - max;
-           
-        group_by_movie = ratings_cvs.groupby(by="filmid")       
-        ratings_by_movie = numpy.zeros(dtype=theano.config.floatX,shape=(len(ratings_cvs),2))
-        ratings_by_movie_ids = numpy.zeros(dtype=numpy.int32,shape=(len(ratings_cvs),2))
-        ratings_by_movie_idx = numpy.zeros(dtype=numpy.int32,shape=(len(group_by_movie),2))
-        i = 0
-        li = 0
-        lt = time.time()
-        j = 0
-        for name,group in group_by_movie:
-            film_id = numpy.int32(name)
-            for row_id in group["id"]:
-                ratings_by_movie_ids[j,self.user_indice] = numpy.int32(ratings_cvs.loc[row_id,"userid"])
-                ratings_by_movie_ids[j,self.movie_indice] = film_id 
-                ratings_by_movie[j,0] = ratings_cvs.loc[row_id,"UserRate"]
-                ratings_by_movie[j,1] = get_aranged(value = ratings_cvs.loc[row_id,"wday"], min_value = 0, max_value = 6)
-                j = j + 1
-            ratings_by_movie_idx[i,] = [li,li+len(group)]  
-            li = li + len(group)
-            t1 = time.time()
-            if t1>lt+1:
-                print("rating_by_movie %f %%" % (float(i)/float(len(group_by_movie))*100))
-                lt = lt+1
-            i = i + 1
-        print("ratings_by_movie rates was calculated")    
-        
-        numpy.save(file=consts.userids_npy_file_name, arr=usersids)
-        numpy.save(file=consts.moviesids_npy_file_name, arr=moviesids)
-        numpy.save(file=consts.ratings_by_user_npy_file_name, arr=ratings_by_user)
-        numpy.save(file=consts.ratings_by_user_ids_npy_file_name, arr=ratings_by_user_ids)
-        numpy.save(file=consts.ratings_by_user_idx_npy_file_name, arr=ratings_by_user_idx)
-        numpy.save(file=consts.ratings_by_movie_npy_file_name, arr=ratings_by_movie)
-        numpy.save(file=consts.ratings_by_movie_ids_npy_file_name, arr=ratings_by_movie_ids)
-        numpy.save(file=consts.ratings_by_movie_idx_npy_file_name, arr=ratings_by_movie_idx)    
-        print("data was prepared and was saved.")
-        return
-    
+  
+  
     def load_data(self,consts=Consts()):
         self.usersids = numpy.load(file=consts.userids_npy_file_name)
         self.moviesids = numpy.load(file=consts.moviesids_npy_file_name)
@@ -1033,6 +840,46 @@ class RecommenderSystem(object):
         self.ratings_by_movie = numpy.load(file=consts.ratings_by_movie_npy_file_name)
         self.ratings_by_movie_ids = numpy.load(file=consts.ratings_by_movie_ids_npy_file_name)
         self.ratings_by_movie_idx = numpy.load(file=consts.ratings_by_movie_idx_npy_file_name)
+        self.users_cvs = pandas.read_csv(
+            consts.users_cvs_file_name
+            ,names = ("id","sex","age","occupation","zipcode","latitude","longitude","timezone","dts")
+            ,dtype = {
+                'id':numpy.int32
+                ,'sex':numpy.str
+                ,'age':numpy.int32
+                ,'occupation':numpy.int32
+                ,"zipcode":numpy.str
+                ,'latitude':numpy.float32
+                ,'longitude':numpy.float32
+                ,'timezone':numpy.int32
+                ,'dts':numpy.int32
+                }
+            ,sep=";"
+            ,skipinitialspace = False
+            ,header=None
+            ,index_col = False
+            ,quoting = csv.QUOTE_ALL
+            ,quotechar='"'
+            ,encoding="utf-8"
+            ,na_values=''
+            )
+        self.movies_cvs = pandas.read_csv(
+            consts.movies_cvs_file_name
+            ,sep=";"
+            ,names = ["id","name","gender","year"]
+            ,dtype = {
+                'id':numpy.int32
+                ,'name':numpy.str
+                ,'gender':numpy.str
+                ,'year':numpy.int32
+                }
+            ,skipinitialspace = False
+            ,header=None
+            ,index_col = False
+            ,quoting = csv.QUOTE_ALL
+            ,quotechar='"'
+            ,encoding="utf-8"
+            )
         return
      
     def __init__(self
@@ -1045,10 +892,16 @@ class RecommenderSystem(object):
         '''
         
         self.load_data()
+        
+        self.items_cnt = self.movies_cvs["id"].max()
+        self.users_cnt = self.users_cvs["id"].max()
+        
         self.matrix_ids = MatrixIDs(
             usersids_data = self.usersids,itemsids_data = self.moviesids
             ,ratings_by_user = self.ratings_by_user,ratings_by_user_ids = self.ratings_by_user_ids,ratings_by_user_idx = self.ratings_by_user_idx
             ,ratings_by_item = self.ratings_by_movie,ratings_by_item_ids = self.ratings_by_movie_ids,ratings_by_item_idx = self.ratings_by_movie_idx
+            ,users_cnt = self.users_cnt
+            ,items_cnt = self.items_cnt 
             ,rng = rng
             ,theano_rng = theano_rng
             ,consts = consts
@@ -1086,8 +939,8 @@ class RecommenderSystem(object):
         return self.rates_approx.validate(consts)
         
     def calc_new_ids(self,consts):
-        self.matrix_ids.get_new_user_ids(consts)
-        self.matrix_ids.get_new_item_ids(consts)
+        self.matrix_ids.get_new_user_ids(self.users_cnt,consts)
+        self.matrix_ids.get_new_item_ids(self.items_cnt,consts)
         return
     
     def save(self,index,consts):
@@ -1223,13 +1076,8 @@ class UserLines(object):
         self.rates_approx = self.recommender_system.rates_approx
         self.rng = rng
         
-        self.movies_cvs = pandas.read_csv(
-            consts.movies_cvs_file_name
-            ,header=None
-            ,sep=";"
-            ,names = ["id","name","gender","year"]
-            ,skipinitialspace = False
-            )
+        self.movies_cvs = self.recommender_system.movies_cvs
+        self.users_cvs = self.recommender_system.users_cvs 
         return
     
     def __user_dist(self,user_id1,user_id2,dist):
@@ -1374,7 +1222,7 @@ class UserLines(object):
             #user_id1 = self.rng.randint(low=0,high=self.matrix_ids.users_count)
             sys.stdout.write("processing %d user_id " % (user_id1,))
             rates = self.__get_rates_of_user(user_id1,rating_info)
-            self.__save_movie_rates(user_id1,rates,consts.user_rates_of_movies_file_name)
+            #self.__save_movie_rates(user_id1,rates,consts.user_rates_of_movies_file_name)
             self.__save_movies_by_rates(user_id1,rates,consts.user_movies_by_rates_file_name)
             sys.stdout.write("-- done\n")
             pass
@@ -1392,8 +1240,9 @@ class UserLines(object):
         rating_info[0] = get_aranged(value = wday, min_value = 0, max_value = 6)
         #user_id = user_lines.rng.randint(low=0,high=user_lines.matrix_ids.users_count)
         #user_ids = user_lines.__find_nearest(user_id,5)
-        user_ids = [user_lines.rng.randint(low=0,high=user_lines.matrix_ids.users_count) for it in numpy.arange(5)]
-        user_lines.build_line_for_rand_user(rating_info = rating_info, user_ids = user_ids, consts = consts)
+        user_indices = [user_lines.rng.randint(low=0,high=len(user_lines.users_cvs)-1) for it in numpy.arange(5)]
+        user_ids = [user_lines.users_cvs.at[indice,"id"] for indice in user_indices]
+        #user_lines.build_line_for_rand_user(rating_info = rating_info, user_ids = user_ids, consts = consts)
         user_lines.build_rate_for_rand_user(rating_info = rating_info, user_ids = user_ids, consts = consts)
         sys.stdout.write("all done\n")
         return
@@ -1536,14 +1385,6 @@ def test_002():
  
     return
 
-def prepare_data():
-    consts = Consts()
-    rng = numpy.random.RandomState()
-    theano_rng = RandomStreams(rng.randint(2 ** 30))
-    rs = RecommenderSystem(rng= rng,theano_rng = theano_rng,consts=consts)
-    rs.prepare_data(consts)
-    return
-
 def trace(index,loss_items_to_user,loss_users_to_item,loss_itemids,loss_rates,validate_loss,validate_loss_min,trace_file_name):
     tf = open(trace_file_name,"at")
     tf.write("%d\t%f\t%f\t%f\t%f\t%f\t%f\n" % (index,loss_items_to_user,loss_users_to_item,loss_itemids,loss_rates,validate_loss,validate_loss_min)) 
@@ -1591,7 +1432,7 @@ def train_all():
             t1 = time.time()
             if t1>lt+1:
                 sys.stdout.write("\t\t\t\t\t\t\t\t\t\r")
-                sys.stdout.write("[%d] %f %f %f %f %f %f\r" % (idx,loss_items_to_user,loss_users_to_item,loss_itemids,loss_rates,validate_loss,validate_loss_min))
+                sys.stdout.write("[%d] %f %f %f %f %f %f\r" % (idx+(consts.load_from_ids*consts.save_cycles),loss_items_to_user,loss_users_to_item,loss_itemids,2*loss_rates,2*validate_loss,2*validate_loss_min))
                 lt = lt+1
             pass
         rs.calc_new_ids(consts=consts)
@@ -1604,7 +1445,7 @@ def train_all():
                 validate_loss_min = validate_loss
                 rs.save_rates(0,consts)
         consts.update_index(idx + (consts.load_from_ids*consts.save_cycles))
-        trace(idx + (consts.load_from_ids*consts.save_cycles),loss_items_to_user,loss_users_to_item,loss_itemids,loss_rates,validate_loss,validate_loss_min,consts.trace_file_name)
+        trace(idx + (consts.load_from_ids*consts.save_cycles),loss_items_to_user,loss_users_to_item,loss_itemids,2*loss_rates,2*validate_loss,2*validate_loss_min,consts.trace_file_name)
         pass
         
     return
@@ -1676,7 +1517,7 @@ def get_clusters(index):
         for movie_info in r:
             outfile.write("%d : %s -- %s\n" % (movie_info[0],movie_info[1],movie_info[2])) 
         gi = gi + 1
-		pass
+        pass
     print("clusters was saved to the file.")
     return
 
@@ -1687,7 +1528,7 @@ def convert_to_dta(indexes):
     for index in indexes:
         nm = NearestMovies(index,consts)
         nm.save_dta(index = index, consts = consts)
-		pass
+        pass
     print("done.")
     return    
 
@@ -1704,25 +1545,23 @@ if __name__ == '__main__':
     print("Pandas version : " + str(pandas.__version__))
     print("Theano version : " + str(theano.__version__))
     
-    #prepare_data()
-    
     #test_001()
     #test_002()
     #test_003()
     #test_005()
 
     train_mode = True
-    user_lines_mode = False
+    get_best_films_for_users_mode = False
         
     if train_mode:
         train_all()
         pass
     else:
-        if user_lines_mode:
-            UserLines.main(0)
+        if get_best_films_for_users_mode:
+            UserLines.main(14)
             pass
         else:
-            indexes = [1]
+            indexes = [14]
             nearest_movies(indexes = indexes)
             convert_to_dta(indexes = indexes)
             pass

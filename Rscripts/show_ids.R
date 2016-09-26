@@ -3,8 +3,8 @@
 #
 
 # [d:\\works\\projects\\RecommenderSystem\\tests\\] -- the folder where we run recommender system
-items_ids <- read.delim("d:\\works\\projects\\RecommenderSystem\\tests\\items_ids.dta", header=FALSE)
-users_ids <- read.delim("d:\\works\\projects\\RecommenderSystem\\tests\\users_ids.dta", header=FALSE)
+items_ids <- read.delim("F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35\\ids_005\\items_ids.dta", header=FALSE)
+users_ids <- read.delim("F:\\works\\projects\\python\\RecommenderSystem\\tests\\16.09.24 -- 17-35\\ids_005\\users_ids.dta", header=FALSE)
 
 par(col="black")
 plot(items_ids_01$V2,items_ids_01$V3,xlim = c(-0.5,0.5),ylim = c(-0.5,0.5))
