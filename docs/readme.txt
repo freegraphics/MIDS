@@ -1,3 +1,5 @@
+(See pfd versions for more information.)
+
 Using autoencoders to build recommender systems
 
 Task description
@@ -43,4 +45,3 @@ After building the model we can use it.
 
 When we use model we do not need to train neural nets, we just compute the id vectors. That gives us opportunity to optimize calculations.
 
-(P.S. Looking for a job.)
